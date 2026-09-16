@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Django — a working reference</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/base16/atelier-forest.min.css">
+<style>
+:root{
+  --ink:#14110c; --paper:#f2ede1; --paper-2:#e9e2d1; --line:#d8cfb8;
+  --rust:#a8481f; --rust-2:#c86a3a; --moss:#4a5d23; --gold:#b7791f;
+  --slate:#3d4a52; --code-bg:#1c1a15; --code-line:#2a2721;
+  --muted:#6b6353; --sub:#8a8171;
+  --accent:var(--rust);
+  --maxw:940px;
+}
+:root[data-theme="dark"]{
+  --ink:#ece5d5; --paper:#141210; --paper-2:#1c1916; --line:#332e26;
+  --rust:#e08a52; --rust-2:#d0703c; --moss:#9db85a; --gold:#e0a94a;
+  --slate:#9fb2bd; --code-bg:#0d0c0a; --code-line:#211e19;
+  --muted:#9a917f; --sub:#7d7466;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:'Inter',system-ui,sans-serif; font-size:16px; line-height:1.7;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:var(--maxw); margin:0 auto; padding:0 28px}
+
+/* ---- hero ---- */
+.hero{padding:76px 0 46px; border-bottom:1px solid var(--line); position:relative}
+.hero .kicker{font-family:'JetBrains Mono',monospace; font-size:12.5px; letter-spacing:.02em; color:var(--rust); margin:0 0 20px}
+.hero h1{
+  font-family:'Fraunces',serif; font-weight:600; font-size:clamp(46px,8vw,84px);
+  line-height:.96; letter-spacing:-.02em; margin:0 0 22px;
+}
+.hero h1 em{font-style:italic; color:var(--rust)}
+.hero .lead{font-size:19px; color:var(--muted); max-width:60ch; margin:0}
+.hero .meta{margin-top:26px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--sub); display:flex; gap:18px; flex-wrap:wrap}
+.hero .meta span{padding:4px 10px; border:1px solid var(--line); border-radius:2px}
+
+/* ---- theme toggle ---- */
+.theme-btn{
+  position:fixed; top:18px; right:18px; z-index:50;
+  background:var(--paper-2); color:var(--ink); border:1px solid var(--line);
+  width:40px; height:40px; border-radius:50%; cursor:pointer; font-size:17px;
+  display:flex; align-items:center; justify-content:center;
+}
+.theme-btn:hover{border-color:var(--rust)}
+
+/* ---- toc ---- */
+.toc{padding:40px 0; border-bottom:1px solid var(--line)}
+.toc h2{font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--sub); margin:0 0 18px; font-weight:500}
+.toc ol{list-style:none; margin:0; padding:0; counter-reset:toc; columns:2; column-gap:40px}
+.toc li{counter-increment:toc; margin-bottom:11px; break-inside:avoid}
+.toc a{color:var(--ink); text-decoration:none; display:flex; gap:12px; align-items:baseline; font-size:15.5px}
+.toc a::before{content:counter(toc,decimal-leading-zero); font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--rust); flex-shrink:0}
+.toc a:hover{color:var(--rust)}
+
+/* ---- sections ---- */
+section{padding:60px 0; border-bottom:1px solid var(--line)}
+.sec-num{font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--rust); letter-spacing:.05em}
+section h2{font-family:'Fraunces',serif; font-weight:600; font-size:clamp(30px,5vw,44px); line-height:1.04; letter-spacing:-.015em; margin:8px 0 20px}
+section h3{font-family:'Fraunces',serif; font-weight:500; font-size:24px; letter-spacing:-.01em; margin:44px 0 12px}
+section h4{font-family:'Inter'; font-weight:600; font-size:15px; margin:28px 0 6px; color:var(--ink)}
+p{margin:0 0 16px; max-width:72ch}
+p code, li code, td code{
+  font-family:'JetBrains Mono',monospace; font-size:.86em; background:var(--paper-2);
+  padding:1.5px 6px; border-radius:3px; border:1px solid var(--line); color:var(--rust);
+}
+strong{font-weight:600}
+ul,ol{max-width:72ch; padding-left:22px}
+li{margin-bottom:8px}
+a.link{color:var(--rust); text-decoration:underline; text-underline-offset:2px; text-decoration-thickness:1px}
+
+/* ---- definition block ---- */
+.def{
+  border-left:3px solid var(--rust); padding:4px 0 4px 20px; margin:20px 0;
+  background:linear-gradient(90deg,var(--paper-2),transparent 80%);
+}
+.def .term{font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--rust); margin-bottom:4px}
+.def p{margin:0; color:var(--ink)}
+
+/* ---- callouts ---- */
+.note{border:1px solid var(--line); border-radius:4px; padding:16px 18px; margin:22px 0; background:var(--paper-2); font-size:14.5px}
+.note .lbl{font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.08em; text-transform:uppercase; font-weight:700; display:block; margin-bottom:6px}
+.note.tip{border-left:3px solid var(--moss)} .note.tip .lbl{color:var(--moss)}
+.note.warn{border-left:3px solid var(--gold)} .note.warn .lbl{color:var(--gold)}
+.note.std{border-left:3px solid var(--slate)} .note.std .lbl{color:var(--slate)}
+.note p{margin:0} .note p+p{margin-top:10px}
+
+/* ---- code ---- */
+.code{margin:22px 0; border-radius:6px; overflow:hidden; border:1px solid var(--code-line); background:var(--code-bg)}
+.code-head{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:9px 14px; background:var(--code-line); border-bottom:1px solid var(--code-line);
+}
+.code-file{font-family:'JetBrains Mono',monospace; font-size:12px; color:#c9b99a; display:flex; align-items:center; gap:8px}
+.code-file .dot{width:8px; height:8px; border-radius:50%; background:var(--rust-2)}
+.code-tag{font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:#7d7156; border:1px solid #3a352b; padding:2px 7px; border-radius:2px}
+.code pre{margin:0; padding:16px 18px; overflow-x:auto; font-family:'JetBrains Mono',monospace; font-size:13px; line-height:1.62}
+.code pre code{font-family:inherit; background:none; border:none; padding:0; color:#d8cbb0}
+.code pre::-webkit-scrollbar{height:8px}
+.code pre::-webkit-scrollbar-thumb{background:#3a352b; border-radius:4px}
+.hljs-comment{color:#6f6650; font-style:italic}
+
+/* ---- diagram card ---- */
+.diagram{margin:26px 0; padding:22px; background:var(--paper-2); border:1px solid var(--line); border-radius:8px}
+.diagram svg{width:100%; height:auto; display:block}
+.dg-cap{font-size:13px; color:var(--sub); margin-top:12px; text-align:center; font-family:'JetBrains Mono',monospace}
+
+/* svg text helpers */
+.svg-t{font-family:'Inter',sans-serif; font-size:14px; font-weight:500; fill:var(--ink)}
+.svg-ts{font-family:'Inter',sans-serif; font-size:12px; fill:var(--muted)}
+.svg-tm{font-family:'JetBrains Mono',monospace; font-size:11.5px; fill:var(--sub)}
+
+/* ---- table ---- */
+.tbl{margin:22px 0; overflow-x:auto; border:1px solid var(--line); border-radius:6px}
+table{width:100%; border-collapse:collapse; font-size:14px}
+th{text-align:left; font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.05em; text-transform:uppercase; color:var(--sub); padding:11px 14px; background:var(--paper-2); border-bottom:1px solid var(--line); font-weight:500}
+td{padding:10px 14px; border-bottom:1px solid var(--line); vertical-align:top}
+tr:last-child td{border-bottom:none}
+td:first-child code{white-space:nowrap}
+
+/* ---- structure list (files) ---- */
+.tree{font-family:'JetBrains Mono',monospace; font-size:13px; line-height:1.9; background:var(--code-bg); border:1px solid var(--code-line); border-radius:6px; padding:18px 20px; margin:22px 0; color:#c9b99a; overflow-x:auto}
+.tree .c{color:#6f6650}
+.tree .f{color:var(--rust-2)}
+
+footer{padding:50px 0 80px; text-align:center}
+footer p{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--sub); margin:0 auto}
+
+@media(max-width:680px){
+  .toc ol{columns:1}
+  .hero{padding:56px 0 36px}
+  body{font-size:15px}
+}
+</style>
+</head>
+<body>
+<button class="theme-btn" onclick="toggleTheme()" aria-label="Toggle theme" id="themeBtn">☀</button>
+
+<div class="wrap">
+
+<!-- ============ HERO ============ -->
+<header class="hero">
+  <p class="kicker">A working reference · production conventions · Django 5.2 LTS</p>
+  <h1>How <em>Django</em><br>actually fits together</h1>
+  <p class="lead">Not a toy tutorial. Every snippet here is close to what you'd commit to a real repository — the layering, the naming, the settings hygiene, and the request path from URL to rendered response.</p>
+  <div class="meta">
+    <span>Django 5.2 LTS</span>
+    <span>Python 3.12+</span>
+    <span>batteries-included MTV</span>
+  </div>
+</header>
+
+<!-- ============ TOC ============ -->
+<nav class="toc">
+  <h2>Contents</h2>
+  <ol>
+    <li><a href="#bigpicture">The big picture — request lifecycle</a></li>
+    <li><a href="#project">Starting a project & layout</a></li>
+    <li><a href="#settings">settings.py, done properly</a></li>
+    <li><a href="#models">Models — the data layer</a></li>
+    <li><a href="#migrations">Migrations</a></li>
+    <li><a href="#orm">The ORM — querying data</a></li>
+    <li><a href="#urls">URLs & routing</a></li>
+    <li><a href="#views">Views — FBV & CBV</a></li>
+    <li><a href="#forms">Forms & validation</a></li>
+    <li><a href="#templates">Templates</a></li>
+    <li><a href="#admin">The admin site</a></li>
+    <li><a href="#auth">Auth & the user model</a></li>
+    <li><a href="#static">Static files & deployment</a></li>
+    <li><a href="#commands">Command cheat-sheet</a></li>
+  </ol>
+</nav>
+
+<!-- ============ 1. BIG PICTURE ============ -->
+<section id="bigpicture">
+  <span class="sec-num">01 — Mental model</span>
+  <h2>The request lifecycle</h2>
+  <p>Django calls its pattern <strong>MTV</strong> — Model, Template, View — which is the same idea as MVC with different labels. Before touching any code, hold this shape in your head: an HTTP request enters, gets routed to exactly one <em>view</em>, the view talks to <em>models</em> and hands data to a <em>template</em>, and an HTTP response comes back out.</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 900 300" role="img" aria-label="Django request lifecycle from browser through URLconf, view, model and template back to response">
+      <defs>
+        <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="var(--rust)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </marker>
+      </defs>
+      <!-- browser -->
+      <rect x="20" y="110" width="120" height="60" rx="8" fill="none" stroke="var(--slate)" stroke-width="1.2"/>
+      <text class="svg-t" x="80" y="135" text-anchor="middle">Browser</text>
+      <text class="svg-ts" x="80" y="153" text-anchor="middle">HTTP request</text>
+      <!-- urls -->
+      <rect x="200" y="110" width="130" height="60" rx="8" fill="none" stroke="var(--rust)" stroke-width="1.4"/>
+      <text class="svg-t" x="265" y="135" text-anchor="middle">URLconf</text>
+      <text class="svg-tm" x="265" y="153" text-anchor="middle">urls.py</text>
+      <!-- view -->
+      <rect x="390" y="110" width="130" height="60" rx="8" fill="none" stroke="var(--rust)" stroke-width="1.4"/>
+      <text class="svg-t" x="455" y="135" text-anchor="middle">View</text>
+      <text class="svg-tm" x="455" y="153" text-anchor="middle">views.py</text>
+      <!-- model -->
+      <rect x="580" y="30" width="130" height="60" rx="8" fill="none" stroke="var(--moss)" stroke-width="1.4"/>
+      <text class="svg-t" x="645" y="55" text-anchor="middle">Model</text>
+      <text class="svg-tm" x="645" y="73" text-anchor="middle">→ database</text>
+      <!-- template -->
+      <rect x="580" y="190" width="130" height="60" rx="8" fill="none" stroke="var(--gold)" stroke-width="1.4"/>
+      <text class="svg-t" x="645" y="215" text-anchor="middle">Template</text>
+      <text class="svg-tm" x="645" y="233" text-anchor="middle">.html</text>
+      <!-- response -->
+      <rect x="760" y="110" width="120" height="60" rx="8" fill="none" stroke="var(--slate)" stroke-width="1.2"/>
+      <text class="svg-t" x="820" y="135" text-anchor="middle">Response</text>
+      <text class="svg-ts" x="820" y="153" text-anchor="middle">HTML / JSON</text>
+      <!-- arrows -->
+      <line x1="142" y1="140" x2="196" y2="140" stroke="var(--rust)" stroke-width="1.4" marker-end="url(#ar)"/>
+      <line x1="332" y1="140" x2="386" y2="140" stroke="var(--rust)" stroke-width="1.4" marker-end="url(#ar)"/>
+      <path d="M520 130 Q555 110 578 75" fill="none" stroke="var(--moss)" stroke-width="1.4" marker-end="url(#ar)"/>
+      <path d="M578 78 Q550 130 520 148" fill="none" stroke="var(--moss)" stroke-width="1.2" stroke-dasharray="4 4"/>
+      <path d="M520 150 Q555 190 578 218" fill="none" stroke="var(--gold)" stroke-width="1.4" marker-end="url(#ar)"/>
+      <path d="M712 220 Q790 220 800 172" fill="none" stroke="var(--rust)" stroke-width="1.4" marker-end="url(#ar)"/>
+      <text class="svg-tm" x="548" y="115" text-anchor="middle" fill="var(--moss)">query</text>
+      <text class="svg-tm" x="556" y="185" text-anchor="middle" fill="var(--gold)">render</text>
+    </svg>
+    <p class="dg-cap">One request → one view → (models + template) → one response</p>
+  </div>
+
+  <p>The order that matters when you build: <code>urls.py</code> decides <em>which</em> view runs, the <strong>view</strong> is the controller that orchestrates everything, <strong>models</strong> define and fetch your data, and <strong>templates</strong> present it. Settings glue it all together. The rest of this document walks each layer with real code.</p>
+</section>
+
+<!-- ============ 2. PROJECT ============ -->
+<section id="project">
+  <span class="sec-num">02 — Setup</span>
+  <h2>Starting a project</h2>
+  <p>Django distinguishes a <strong>project</strong> (the whole site + configuration) from an <strong>app</strong> (a self-contained feature module — <code>blog</code>, <code>accounts</code>, <code>orders</code>). One project holds many apps. Always work inside a virtual environment.</p>
+
+  <div class="code">
+    <div class="code-head"><span class="code-file"><span class="dot"></span>terminal</span><span class="code-tag">bash</span></div>
+    <pre><code class="language-bash"><span class="hljs-comment"># 1. Isolated environment (per project, never global)</span>
+python -m venv .venv
+source .venv/bin/activate        <span class="hljs-comment"># Windows: .venv\Scripts\activate</span>
+
+<span class="hljs-comment"># 2. Install and pin</span>
+pip install "Django==5.2.*" psycopg[binary] python-dotenv
+pip freeze &gt; requirements.txt
+
+<span class="hljs-comment"># 3. Create the project in the CURRENT dir (note the trailing ".")</span>
+<span class="hljs-comment">#    Without the dot, Django nests an extra folder you don't want.</span>
+django-admin startproject config .
+
+<span class="hljs-comment"># 4. Create your first app</span>
+python manage.py startapp blog
+
+<span class="hljs-comment"># 5. Confirm it runs</span>
+python manage.py migrate
+python manage.py runserver</code></pre>
+  </div>
+
+  <div class="note std">
+    <span class="lbl">Convention that pays off</span>
+    <p>Name the settings package <code>config</code> (or <code>core</code>) rather than repeating the project name. It keeps imports like <code>config.settings</code> stable even if the project gets renamed, and it reads clearly as "this is configuration, not a feature."</p>
+  </div>
+
+  <h3>What the layout looks like</h3>
+  <p>Here's a production-shaped tree. The key idea: apps live at the top level, settings live in <code>config/</code>, and cross-cutting folders (templates, static, tests) are explicit.</p>
+
+  <div class="tree">
+myproject/
+├── <span class="f">.venv/</span>                  <span class="c"># virtualenv (git-ignored)</span>
+├── <span class="f">.env</span>                    <span class="c"># secrets, never committed</span>
+├── manage.py              <span class="c"># CLI entry point</span>
+├── requirements.txt
+├── config/                <span class="c"># the "project" — glue only</span>
+│   ├── __init__.py
+│   ├── settings.py        <span class="c"># or a settings/ package (see §03)</span>
+│   ├── urls.py            <span class="c"># root URLconf</span>
+│   ├── asgi.py
+│   └── wsgi.py
+├── blog/                  <span class="c"># an "app" — one feature</span>
+│   ├── __init__.py
+│   ├── admin.py
+│   ├── apps.py
+│   ├── models.py
+│   ├── views.py
+│   ├── urls.py            <span class="c"># you create this</span>
+│   ├── forms.py           <span class="c"># you create this</span>
+│   ├── migrations/
+│   ├── templates/blog/    <span class="c"># namespaced by app</span>
+│   └── tests/
+└── templates/             <span class="c"># project-wide base templates</span>
+  </div>
+
+  <div class="note tip">
+    <span class="lbl">Why templates/blog/ and not templates/</span>
+    <p>Django's template loader searches <em>all</em> app template dirs and returns the first match. If two apps both have <code>index.html</code>, you get collisions. Namespacing each under a folder matching the app name (<code>blog/index.html</code>) makes every template path unambiguous. Same logic applies to <code>static/blog/</code>.</p>
+  </div>
+</section>
+
+<!-- ============ 3. SETTINGS ============ -->
+<section id="settings">
+  <span class="sec-num">03 — Configuration</span>
+  <h2>settings.py, done properly</h2>
+  <p>The generated <code>settings.py</code> is fine for a first run but hard-codes secrets and a single environment. Real projects read config from the environment and keep <code>DEBUG=False</code> anywhere that isn't your laptop. Here's the shape you actually want.</p>
+
+  <div class="code">
+    <div class="code-head"><span class="code-file"><span class="dot"></span>config/settings.py</span><span class="code-tag">python</span></div>
+    <pre><code class="language-python"><span class="hljs-comment"># =========================================================================</span>
+<span class="hljs-comment"># DEFINITION: settings.py is a plain Python module Django imports once at</span>
+<span class="hljs-comment"># startup. Every UPPERCASE name here becomes globally readable via</span>
+<span class="hljs-comment"># django.conf.settings. Secrets come from the environment, not the file.</span>
+<span class="hljs-comment"># =========================================================================</span>
+from pathlib import Path
+import os
+from dotenv import load_dotenv
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env")           <span class="hljs-comment"># pulls KEY=value pairs into os.environ</span>
+
+
+def env(key, default=None, required=False):
+    """Small helper so config reads clearly and fails loudly."""
+    value = os.environ.get(key, default)
+    if required and value is None:
+        raise RuntimeError(f"Missing required env var: {key}")
+    return value
+
+
+<span class="hljs-comment"># --- Core security -------------------------------------------------------</span>
+SECRET_KEY = env("DJANGO_SECRET_KEY", required=True)
+DEBUG = env("DJANGO_DEBUG", "False") == "True"
+ALLOWED_HOSTS = env("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+
+<span class="hljs-comment"># --- Applications --------------------------------------------------------</span>
+DJANGO_APPS = [
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+]
+THIRD_PARTY_APPS = [
+    <span class="hljs-comment"># "rest_framework", "django_htmx", ...</span>
+]
+LOCAL_APPS = [
+    "blog.apps.BlogConfig",               <span class="hljs-comment"># point at the AppConfig, not just "blog"</span>
+    "accounts.apps.AccountsConfig",
+]
+INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
+
+<span class="hljs-comment"># --- Middleware (ORDER MATTERS — top runs first on the way in) -----------</span>
+MIDDLEWARE = [
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+]
+
+ROOT_URLCONF = "config.urls"
+WSGI_APPLICATION = "config.wsgi.application"
+
+<span class="hljs-comment"># --- Templates -----------------------------------------------------------</span>
+TEMPLATES = [
+    {
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [BASE_DIR / "templates"],   <span class="hljs-comment"># project-wide templates/</span>
+        "APP_DIRS": True,                   <span class="hljs-comment"># also search each app's templates/</span>
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
+            ],
+        },
+    },
+]
+
+<span class="hljs-comment"># --- Database (Postgres in prod; sane fallback for local dev) ------------</span>
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": env("DB_NAME", "myproject"),
+        "USER": env("DB_USER", "postgres"),
+        "PASSWORD": env("DB_PASSWORD", ""),
+        "HOST": env("DB_HOST", "localhost"),
+        "PORT": env("DB_PORT", "5432"),
+        "CONN_MAX_AGE": 60,                <span class="hljs-comment"># reuse connections (perf)</span>
+    }
+}
+
+<span class="hljs-comment"># --- Auth ----------------------------------------------------------------</span>
+AUTH_USER_MODEL = "accounts.User"          <span class="hljs-comment"># set this on day one — see §12</span>
+AUTH_PASSWORD_VALIDATORS = [
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+]
+LOGIN_URL = "accounts:login"
+LOGIN_REDIRECT_URL = "blog:index"
+
+<span class="hljs-comment"># --- i18n / tz -----------------------------------------------------------</span>
+LANGUAGE_CODE = "en-us"
+TIME_ZONE = "Europe/Belgrade"
+USE_I18N = True
+USE_TZ = True                              <span class="hljs-comment"># store datetimes in UTC — always leave on</span>
+
+<span class="hljs-comment"># --- Static & media ------------------------------------------------------</span>
+STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"     <span class="hljs-comment"># collectstatic target (prod)</span>
+STATICFILES_DIRS = [BASE_DIR / "static"]   <span class="hljs-comment"># your source assets (dev)</span>
+MEDIA_URL = "media/"
+MEDIA_ROOT = BASE_DIR / "media"            <span class="hljs-comment"># user uploads</span>
+
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+<span class="hljs-comment"># --- Production-only hardening -------------------------------------------</span>
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31_536_000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")</code></pre>
+  </div>
+
+  <div class="code">
+    <div class="code-head"><span class="code-file"><span class="dot"></span>.env</span><span class="code-tag">env · git-ignored</span></div>
+    <pre><code class="language-bash">DJANGO_SECRET_KEY=change-me-generate-a-real-50-char-random-string
+DJANGO_DEBUG=True
+DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
+DB_NAME=myproject
+DB_USER=postgres
+DB_PASSWORD=supersecret
+DB_HOST=localhost</code></pre>
+  </div>
+
+  <div class="note warn">
+    <span class="lbl">The three settings that cause real incidents</span>
+    <p><code>SECRET_KEY</code> in the repo, <code>DEBUG=True</code> in production (it leaks your whole environment on any error page), and a wildcard <code>ALLOWED_HOSTS = ["*"]</code>. Get these three right and you've avoided the most common Django security mistakes.</p>
+  </div>
+
+  <div class="note tip">
+    <span class="lbl">Scaling up</span>
+    <p>When one file gets unwieldy, convert <code>settings.py</code> into a package: <code>config/settings/base.py</code>, <code>dev.py</code>, <code>prod.py</code>, each ending with <code>from .base import *</code>. Select with <code>DJANGO_SETTINGS_MODULE=config.settings.prod</code>.</p>
+  </div>
+</section>
+
+<!-- ============ 4. MODELS ============ -->
+<section id="models">
+  <span class="sec-num">04 — Data layer</span>
+  <h2>Models</h2>
+  <div class="def">
+    <div class="term">Definition</div>
+    <p>A model is a Python class that maps to one database table. Each class attribute is a column, each instance is a row. Django's ORM generates the SQL, so you rarely write it by hand.</p>
+  </div>
+
+  <p>Below is a realistic <code>blog</code> models file. Note what makes it production-grade: an abstract <code>TimeStampedModel</code> base, an explicit custom <strong>manager</strong>, database <strong>indexes</strong> and <strong>constraints</strong>, <code>related_name</code> on every relation, a <code>get_absolute_url</code>, and a <code>Meta</code> with sensible ordering.</p>
+
+  <div class="code">
+    <div class="code-head"><span class="code-file"><span class="dot"></span>blog/models.py</span><span class="code-tag">python</span></div>
+    <pre><code class="language-python">from django.conf import settings
+from django.db import models
+from django.urls import reverse
+from django.utils import timezone
+from django.utils.text import slugify
+
+
+<span class="hljs-comment"># --- Reusable abstract base ------------------------------------------------</span>
+<span class="hljs-comment"># TEMPLATE: put common columns in an abstract model. abstract=True means</span>
+<span class="hljs-comment"># Django creates NO table for it — the fields are copied into each child.</span>
+class TimeStampedModel(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)   <span class="hljs-comment"># set once, on insert</span>
+    updated_at = models.DateTimeField(auto_now=True)       <span class="hljs-comment"># set on every save</span>
+
+    class Meta:
+        abstract = True
+
+
+<span class="hljs-comment"># --- Custom manager: encapsulate common querysets --------------------------</span>
+<span class="hljs-comment"># DEFINITION: a Manager is the entry point for DB queries (Model.objects).</span>
+<span class="hljs-comment"># Subclass it to name your business-logic queries once, reuse everywhere.</span>
+class PublishedManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(status=Post.Status.PUBLISHED)
+
+
+class Category(TimeStampedModel):
+    name = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(max_length=100, unique=True)
+
+    class Meta:
+        verbose_name_plural = "categories"
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
+class Post(TimeStampedModel):
+    <span class="hljs-comment"># TextChoices gives you an enum with DB value + human label + IDE autocomplete</span>
+    class Status(models.TextChoices):
+        DRAFT = "DF", "Draft"
+        PUBLISHED = "PB", "Published"
+
+    title = models.CharField(max_length=250)
+    slug = models.SlugField(max_length=250, unique_for_date="published_at")
+    body = models.TextField()
+    status = models.CharField(
+        max_length=2, choices=Status.choices, default=Status.DRAFT,
+    )
+    published_at = models.DateTimeField(default=timezone.now)
+
+    <span class="hljs-comment"># RELATIONSHIPS ---------------------------------------------------------</span>
+    <span class="hljs-comment"># FK  = many posts → one author. Always reference the user via settings.</span>
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,          <span class="hljs-comment"># delete posts if the user is deleted</span>
+        related_name="posts",              <span class="hljs-comment"># enables user.posts.all()</span>
+    )
+    <span class="hljs-comment"># FK to Category, but keep posts if the category is removed (SET_NULL)</span>
+    category = models.ForeignKey(
+        Category, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name="posts",
+    )
+    <span class="hljs-comment"># M2M = a post has many tags, a tag has many posts</span>
+    tags = models.ManyToManyField("Tag", blank=True, related_name="posts")
+
+    <span class="hljs-comment"># MANAGERS --------------------------------------------------------------</span>
+    objects = models.Manager()             <span class="hljs-comment"># the default — keep it first</span>
+    published = PublishedManager()         <span class="hljs-comment"># Post.published.all() → only PB</span>
+
+    class Meta:
+        ordering = ["-published_at"]
+        indexes = [
+            models.Index(fields=["-published_at"]),
+            models.Index(fields=["status", "published_at"]),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["slug", "published_at"],
+                name="unique_slug_per_date",
+            ),
+        ]
+
+    def __str__(self):
+        return self.title
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.title)
+        super().save(*args, **kwargs)
+
+    <span class="hljs-comment"># CONVENTION: models own their canonical URL. Templates & redirects</span>
+    <span class="hljs-comment"># call post.get_absolute_url() instead of hard-coding paths.</span>
+    def get_absolute_url(self):
+        return reverse("blog:post_detail", kwargs={"slug": self.slug})
+
+
+class Tag(TimeStampedModel):
+    name = models.CharField(max_length=50, unique=True)
+    slug = models.SlugField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.name</code></pre>
+  </div>
+
+  <h3>How the relationships map</h3>
+  <p>The three relation types are the thing beginners most often get wrong. Here is what the tables actually look like — the FK lives as a column on the "many" side, and the M2M becomes a hidden third table.</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 900 340" role="img" aria-label="Entity relationships between User, Post, Category and Tag showing foreign keys and a many to many join table">
+      <defs>
+        <marker id="ar2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </marker>
+      </defs>
+      <!-- User -->
+      <rect x="40" y="130" width="150" height="72" rx="8" fill="none" stroke="var(--slate)" stroke-width="1.3"/>
+      <text class="svg-t" x="115" y="158" text-anchor="middle">User</text>
+      <text class="svg-tm" x="115" y="178" text-anchor="middle">id · email</text>
+      <!-- Post -->
+      <rect x="330" y="120" width="180" height="92" rx="8" fill="none" stroke="var(--rust)" stroke-width="1.5"/>
+      <text class="svg-t" x="420" y="146" text-anchor="middle">Post</text>
+      <text class="svg-tm" x="420" y="166" text-anchor="middle">id · title · slug</text>
+      <text class="svg-tm" x="420" y="184" text-anchor="middle">author_id (FK)</text>
+      <text class="svg-tm" x="420" y="200" text-anchor="middle">category_id (FK)</text>
+      <!-- Category -->
+      <rect x="680" y="40" width="170" height="72" rx="8" fill="none" stroke="var(--moss)" stroke-width="1.3"/>
+      <text class="svg-t" x="765" y="68" text-anchor="middle">Category</text>
+      <text class="svg-tm" x="765" y="88" text-anchor="middle">id · name · slug</text>
+      <!-- join table -->
+      <rect x="330" y="260" width="180" height="60" rx="8" fill="none" stroke="var(--gold)" stroke-width="1.2" stroke-dasharray="5 4"/>
+      <text class="svg-t" x="420" y="285" text-anchor="middle" style="font-size:13px">post_tags</text>
+      <text class="svg-tm" x="420" y="304" text-anchor="middle">post_id · tag_id</text>
+      <!-- Tag -->
+      <rect x="680" y="248" width="170" height="72" rx="8" fill="none" stroke="var(--gold)" stroke-width="1.3"/>
+      <text class="svg-t" x="765" y="276" text-anchor="middle">Tag</text>
+      <text class="svg-tm" x="765" y="296" text-anchor="middle">id · name · slug</text>
+      <!-- edges -->
+      <line x1="190" y1="166" x2="326" y2="166" stroke="var(--muted)" stroke-width="1.3" marker-end="url(#ar2)"/>
+      <text class="svg-ts" x="258" y="156" text-anchor="middle">1 ── ∞</text>
+      <path d="M510 150 Q600 120 676 90" fill="none" stroke="var(--muted)" stroke-width="1.3" marker-end="url(#ar2)"/>
+      <text class="svg-ts" x="600" y="112" text-anchor="middle">∞ ── 1</text>
+      <line x1="420" y1="212" x2="420" y2="256" stroke="var(--muted)" stroke-width="1.3" marker-end="url(#ar2)"/>
+      <line x1="510" y1="290" x2="676" y2="286" stroke="var(--muted)" stroke-width="1.3" marker-end="url(#ar2)"/>
+      <text class="svg-ts" x="595" y="278" text-anchor="middle">∞ ── ∞</text>
+    </svg>
+    <p class="dg-cap">FK = a column on the "many" side · M2M = an auto-generated join table</p>
+  </div>
+
+  <div class="tbl">
+    <table>
+      <thead><tr><th>Field type</th><th>Maps to</th><th>Use for</th></tr></thead>
+      <tbody>
+        <tr><td><code>CharField</code></td><td>VARCHAR</td><td>Short text — requires <code>max_length</code></td></tr>
+        <tr><td><code>TextField</code></td><td>TEXT</td><td>Long / unbounded text</td></tr>
+        <tr><td><code>SlugField</code></td><td>VARCHAR</td><td>URL-safe strings</td></tr>
+        <tr><td><code>IntegerField</code> / <code>DecimalField</code></td><td>INT / NUMERIC</td><td>Numbers (money → Decimal)</td></tr>
+        <tr><td><code>BooleanField</code></td><td>BOOL</td><td>True/false flags</td></tr>
+        <tr><td><code>DateTimeField</code></td><td>TIMESTAMP</td><td><code>auto_now</code> / <code>auto_now_add</code></td></tr>
+        <tr><td><code>ForeignKey</code></td><td>column + FK</td><td>Many-to-one</td></tr>
+        <tr><td><code>ManyToManyField</code></td><td>join table</td><td>Many-to-many</td></tr>
+        <tr><td><code>OneToOneField</code></td><td>unique FK</td><td>Profile-style extension</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============ 5. MIGRATIONS ============ -->
+<section id="migrations">
+  <span class="sec-num">05 — Schema evolution</span>
+  <h2>Migrations</h2>
+  <p>You never write <code>CREATE TABLE</code> by hand. You change <code>models.py</code>, Django diffs it against the current schema, and generates a migration file — a versioned, reviewable Python description of the change. Migrations are committed to git and applied everywhere in order.</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 900 150" role="img" aria-label="Migration workflow: edit models, make migrations, review the generated file, then migrate to apply">
+      <defs>
+        <marker id="ar3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="var(--rust)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </marker>
+      </defs>
+      <g>
+        <rect x="20" y="45" width="180" height="60" rx="8" fill="none" stroke="var(--slate)" stroke-width="1.3"/>
+        <text class="svg-t" x="110" y="70" text-anchor="middle">Edit models.py</text>
+        <text class="svg-ts" x="110" y="88" text-anchor="middle">add / change a field</text>
+      </g>
+      <g>
+        <rect x="255" y="45" width="180" height="60" rx="8" fill="none" stroke="var(--rust)" stroke-width="1.4"/>
+        <text class="svg-t" x="345" y="70" text-anchor="middle">makemigrations</text>
+        <text class="svg-tm" x="345" y="88" text-anchor="middle">→ 0002_add_x.py</text>
+      </g>
+      <g>
+        <rect x="490" y="45" width="160" height="60" rx="8" fill="none" stroke="var(--gold)" stroke-width="1.3"/>
+        <text class="svg-t" x="570" y="70" text-anchor="middle">Review &amp; commit</text>
+        <text class="svg-ts" x="570" y="88" text-anchor="middle">read the diff</text>
+      </g>
+      <g>
+        <rect x="705" y="45" width="175" height="60" rx="8" fill="none" stroke="var(--moss)" stroke-width="1.4"/>
+        <text class="svg-t" x="792" y="70" text-anchor="middle">migrate</text>
+        <text class="svg-ts" x="792" y="88" text-anchor="middle">applies to the DB</text>
+      </g>
+      <line x1="200" y1="75" x2="251" y2="75" stroke="var(--rust)" stroke-width="1.4" marker-end="url(#ar3)"/>
+      <line x1="435" y1="75" x2="486" y2="75" stroke="var(--rust)" stroke-width="1.4" marker-end="url(#ar3)"/>
+      <line x1="650" y1="75" x2="701" y2="75" stroke="var(--rust)" stroke-width="1.4" marker-end="url(#ar3)"/>
+    </svg>
+    <p class="dg-cap">Model change → generate → review → apply. The file is the source of truth.</p>
+  </div>
+
+  <div class="code">
+    <div class="code-head"><span class="code-file"><span class="dot"></span>terminal</span><span class="code-tag">bash</span></div>
+    <pre><code class="language-bash"><span class="hljs-comment"># Generate migration files from model changes (does NOT touch the DB)</span>
+python manage.py makemigrations blog
+
+<span class="hljs-comment"># See the SQL a migration will run, before running it</span>
+python manage.py sqlmigrate blog 0002
+
+<span class="hljs-comment"># Apply all unapplied migrations to the database</span>
+python manage.py migrate
+
+<span class="hljs-comment"># Inspect state: [X] = applied, [ ] = pending</span>
+python manage.py showmigrations
+
+<span class="hljs-comment"># Roll back to an earlier migration (0001) — reverses 0002+</span>
+python manage.py migrate blog 0001
+
+<span class="hljs-comment"># Data migration scaffold (for backfilling / transforming rows)</span>
+python manage.py makemigrations --empty blog --name backfill_slugs</code></pre>
+  </div>
+
+  <div class="note warn">
+    <span class="lbl">Golden rules</span>
+    <p>Always <code>makemigrations</code> and <code>migrate</code> as two separate steps — never edit the DB by hand. Commit migration files. And review the generated migration before applying to production: <code>makemigrations</code> occasionally makes a destructive choice (like dropping and recreating a column) that you'll want to rewrite.</p>
+  </div>
+</section>
+
+<!-- ============ 6. ORM ============ -->
+<section id="orm">
+  <span class="sec-num">06 — Querying</span>
+  <h2>The ORM in practice</h2>
+  <p>The ORM turns Python method chains into SQL. QuerySets are <strong>lazy</strong> — no query runs until you iterate, slice, or call something like <code>list()</code>. This lets you build a query up in pieces and hit the database exactly once.</p>
+
+  <div class="code">
+    <div class="code-head"><span class="code-file"><span class="dot"></span>ORM patterns</span><span class="code-tag">python</span></div>
+    <pre><code class="language-python">from blog.models import Post, Category
+
+<span class="hljs-comment"># CREATE ------------------------------------------------------------------</span>
+post = Post.objects.create(title="Hello", body="...", author=request.user)
+
+<span class="hljs-comment"># READ — filter / exclude / get -------------------------------------------</span>
+Post.published.all()                          <span class="hljs-comment"># custom manager → only published</span>
+Post.objects.filter(status="PB")              <span class="hljs-comment"># WHERE status = 'PB'</span>
+Post.objects.exclude(author=request.user)     <span class="hljs-comment"># WHERE NOT ...</span>
+Post.objects.get(slug="hello")                <span class="hljs-comment"># exactly one row (or raises)</span>
+
+<span class="hljs-comment"># Field lookups use double-underscore syntax -----------------------------</span>
+Post.objects.filter(title__icontains="django")        <span class="hljs-comment"># ILIKE '%django%'</span>
+Post.objects.filter(published_at__year=2026)          <span class="hljs-comment"># date parts</span>
+Post.objects.filter(author__email="a@b.com")          <span class="hljs-comment"># FK traversal (JOIN)</span>
+Post.objects.filter(category__slug__in=["news","hr"]) <span class="hljs-comment"># IN + traversal</span>
+
+<span class="hljs-comment"># Complex conditions with Q objects (OR / AND / NOT) ---------------------</span>
+from django.db.models import Q
+Post.objects.filter(Q(status="PB") | Q(author=request.user))
+
+<span class="hljs-comment"># ORDER / SLICE / COUNT / EXISTS -----------------------------------------</span>
+Post.objects.order_by("-published_at")[:10]   <span class="hljs-comment"># LIMIT 10, newest first</span>
+Post.objects.filter(status="PB").count()
+Post.objects.filter(author=request.user).exists()
+
+<span class="hljs-comment"># AGGREGATE & ANNOTATE ---------------------------------------------------</span>
+from django.db.models import Count, Avg
+Category.objects.annotate(n=Count("posts")).filter(n__gt=5)  <span class="hljs-comment"># per-row count</span>
+
+<span class="hljs-comment"># UPDATE / DELETE (in bulk, one SQL statement) ---------------------------</span>
+Post.objects.filter(status="DF").update(status="PB")
+Post.objects.filter(published_at__year=2020).delete()</code></pre>
+  </div>
+
+  <h3>The N+1 problem — the one optimisation to internalise</h3>
+  <p>Looping over posts and touching <code>post.author</code> inside the loop fires one extra query per post. On a page of 50 posts that's 51 queries. <code>select_related</code> (for FK/O2O) and <code>prefetch_related</code> (for M2M / reverse FK) collapse that into a small constant.</p>
+
+  <div class="code">
+    <div class="code-head"><span class="code-file"><span class="dot"></span>avoiding N+1</span><span class="code-tag">python</span></div>
+    <pre><code class="language-python"><span class="hljs-comment"># ❌ 1 query for posts + 1 query PER post for its author = N+1</span>
+for post in Post.objects.all():
+    print(post.author.email)
+
+<span class="hljs-comment"># ✅ single JOIN pulls authors up front — 1 query total</span>
+for post in Post.objects.select_related("author", "category"):
+    print(post.author.email)
+
+<span class="hljs-comment"># ✅ for many-to-many / reverse FK, prefetch_related does 2 queries</span>
+posts = Post.objects.prefetch_related("tags").select_related("author")</code></pre>
+  </div>
+
+  <div class="note tip">
+    <span class="lbl">Debug your query count</span>
+    <p>Install <code>django-debug-toolbar</code> in dev — it shows the exact SQL and query count on every page. Watching that number is how you catch N+1 issues before they reach production.</p>
+  </div>
+</section>
+
+<!-- ============ 7. URLS ============ -->
+<section id="urls">
+  <span class="sec-num">07 — Routing</span>
+  <h2>URLs &amp; routing</h2>
+  <div class="def">
+    <div class="term">Definition</div>
+    <p>A URLconf is an ordered list of URL patterns. Django walks it top to bottom on each request and dispatches to the first pattern that matches, passing any captured pieces to the view.</p>
+  </div>
+
+  <p>Best practice: the root URLconf in <code>config/</code> only <code>include()</code>s per-app URLconfs. Each app owns its own <code>urls.py</code> with an <code>app_name</code> for namespacing. That's what makes <code>reverse("blog:post_detail")</code> work.</p>
+
+  <div class="code">
+    <div class="code-head"><span class="code-file"><span class="dot"></span>config/urls.py</span><span class="code-tag">python · root</span></div>
+    <pre><code class="language-python">from django.conf import settings
+from django.conf.urls.static import static
+from django.contrib import admin
+from django.urls import path, include
+
+urlpatterns = [
+    path("admin/", admin.site.urls),
+    path("accounts/", include("accounts.urls")),   <span class="hljs-comment"># delegate to the app</span>
+    path("", include("blog.urls")),                 <span class="hljs-comment"># blog owns the root</span>
+]
+
+<span class="hljs-comment"># Serve user-uploaded media in DEBUG only (a real server handles this in prod)</span>
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)</code></pre>
+  </div>
+
+  <div class="code">
+    <div class="code-head"><span class="code-file"><span class="dot"></span>blog/urls.py</span><span class="code-tag">python · app</span></div>
+    <pre><code class="language-python">from django.urls import path
+from . import views
+
+<span class="hljs-comment"># app_name enables namespaced reversing: reverse("blog:post_detail")</span>
+app_name = "blog"
+
+urlpatterns = [
+    <span class="hljs-comment"># TEMPLATE: path(route, view, name)</span>
+    path("", views.PostListView.as_view(), name="index"),
+
+    <span class="hljs-comment"># PATH CONVERTERS capture typed segments: &lt;type:name&gt;</span>
+    <span class="hljs-comment"># &lt;slug:...&gt; matches letters/numbers/hyphens, &lt;int:...&gt; digits, etc.</span>
+    path("post/&lt;slug:slug&gt;/", views.PostDetailView.as_view(), name="post_detail"),
+    path("category/&lt;slug:slug&gt;/", views.PostListView.as_view(), name="by_category"),
+
+    path("new/", views.PostCreateView.as_view(), name="post_create"),
+    path("post/&lt;slug:slug&gt;/edit/", views.PostUpdateView.as_view(), name="post_edit"),
+    path("post/&lt;slug:slug&gt;/delete/", views.PostDeleteView.as_view(), name="post_delete"),
+]</code></pre>
+  </div>
+
+  <div class="tbl">
+    <table>
+      <thead><tr><th>Converter</th><th>Matches</th><th>Example route</th></tr></thead>
+      <tbody>
+        <tr><td><code>&lt;int:pk&gt;</code></td><td>Positive integers</td><td><code>post/&lt;int:pk&gt;/</code></td></tr>
+        <tr><td><code>&lt;slug:slug&gt;</code></td><td>a-z, 0-9, hyphen, underscore</td><td><code>post/&lt;slug:slug&gt;/</code></td></tr>
+        <tr><td><code>&lt;str:name&gt;</code></td><td>Any non-slash text</td><td><code>user/&lt;str:name&gt;/</code></td></tr>
+        <tr><td><code>&lt;uuid:id&gt;</code></td><td>UUID strings</td><td><code>order/&lt;uuid:id&gt;/</code></td></tr>
+        <tr><td><code>&lt;path:p&gt;</code></td><td>Text including slashes</td><td><code>files/&lt;path:p&gt;/</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note tip">
+    <span class="lbl">Never hard-code a URL</span>
+    <p>In templates use <code>{% url 'blog:post_detail' slug=post.slug %}</code>; in Python use <code>reverse()</code> or <code>redirect("blog:index")</code>; on models use <code>get_absolute_url()</code>. Then changing a route in <code>urls.py</code> updates every link automatically.</p>
+  </div>
+</section>
+
+<!-- ============ 8. VIEWS ============ -->
+<section id="views">
+  <span class="sec-num">08 — Controllers</span>
+  <h2>Views</h2>
+  <div class="def">
+    <div class="term">Definition</div>
+    <p>A view is a callable that takes an <code>HttpRequest</code> and returns an <code>HttpResponse</code>. It's the orchestrator: read input, query models, run logic, pick a template or serialize, respond.</p>
+  </div>
+
+  <p>Django gives you two styles. <strong>Function-based views (FBV)</strong> are explicit and easy to read. <strong>Class-based views (CBV)</strong> package the common CRUD patterns so you write almost nothing. Use FBVs for one-off custom logic; use CBVs (especially the generic ones) for standard list/detail/create/update/delete.</p>
+
+  <h3>Function-based view</h3>
+  <div class="code">
+    <div class="code-head"><span class="code-file"><span class="dot"></span>blog/views.py</span><span class="code-tag">python · FBV</span></div>
+    <pre><code class="language-python">from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404, redirect, render
+
+from .forms import PostForm
+from .models import Post
+
+
+<span class="hljs-comment"># TEMPLATE: def view(request, *captured_kwargs): ... return HttpResponse</span>
+def post_list(request):
+    <span class="hljs-comment"># select_related avoids N+1 on author (see §06)</span>
+    posts = Post.published.select_related("author", "category")
+    <span class="hljs-comment"># render(request, template_path, context_dict) → HttpResponse</span>
+    return render(request, "blog/post_list.html", {"posts": posts})
+
+
+def post_detail(request, slug):
+    <span class="hljs-comment"># get_object_or_404 = get(), but raises a clean 404 instead of a 500</span>
+    post = get_object_or_404(
+        Post.published.select_related("author"), slug=slug,
+    )
+    return render(request, "blog/post_detail.html", {"post": post})
+
+
+<span class="hljs-comment"># DECORATOR enforces auth: anonymous users are redirected to LOGIN_URL</span>
+@login_required
+def post_create(request):
+    if request.method == "POST":
+        form = PostForm(request.POST)
+        if form.is_valid():
+            post = form.save(commit=False)   <span class="hljs-comment"># build instance, don't hit DB yet</span>
+            post.author = request.user       <span class="hljs-comment"># attach the logged-in user</span>
+            post.save()
+            form.save_m2m()                  <span class="hljs-comment"># needed after commit=False for M2M</span>
+            return redirect(post)            <span class="hljs-comment"># uses get_absolute_url()</span>
+    else:
+        form = PostForm()
+    return render(request, "blog/post_form.html", {"form": form})</code></pre>
+  </div>
+
+  <h3>Class-based view — the same, shorter</h3>
+  <p>The generic CBVs know the standard flow. A <code>ListView</code> fetches a queryset and renders it; a <code>CreateView</code> builds the form, validates on POST, saves, and redirects. You override only the pieces that differ.</p>
+
+  <div class="code">
+    <div class="code-head"><span class="code-file"><span class="dot"></span>blog/views.py</span><span class="code-tag">python · CBV</span></div>
+    <pre><code class="language-python">from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.urls import reverse_lazy
+from django.views.generic import (
+    ListView, DetailView, CreateView, UpdateView, DeleteView,
+)
+from .forms import PostForm
+from .models import Post
+
+
+class PostListView(ListView):
+    model = Post
+    template_name = "blog/post_list.html"
+    context_object_name = "posts"          <span class="hljs-comment"># {{ posts }} in the template</span>
+    paginate_by = 10                        <span class="hljs-comment"># free pagination</span>
+
+    <span class="hljs-comment"># Override to filter / optimise the queryset</span>
+    def get_queryset(self):
+        qs = Post.published.select_related("author", "category")
+        if slug := self.kwargs.get("slug"):
+            qs = qs.filter(category__slug=slug)
+        return qs
+
+
+class PostDetailView(DetailView):
+    model = Post
+    template_name = "blog/post_detail.html"
+    <span class="hljs-comment"># DetailView looks up by pk or slug from the URL automatically</span>
+
+    def get_queryset(self):
+        return Post.published.select_related("author")
+
+
+<span class="hljs-comment"># MIXINS compose behaviour: require login, then the create flow</span>
+class PostCreateView(LoginRequiredMixin, CreateView):
+    model = Post
+    form_class = PostForm
+    template_name = "blog/post_form.html"
+
+    <span class="hljs-comment"># Hook: runs after validation, before save — inject the author</span>
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        return super().form_valid(form)
+
+
+class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Post
+    form_class = PostForm
+    template_name = "blog/post_form.html"
+
+    <span class="hljs-comment"># UserPassesTestMixin: only the author may edit</span>
+    def test_func(self):
+        return self.get_object().author == self.request.user
+
+
+class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Post
+    success_url = reverse_lazy("blog:index")
+
+    def test_func(self):
+        return self.get_object().author == self.request.user</code></pre>
+  </div>
+
+  <div class="tbl">
+    <table>
+      <thead><tr><th>Generic CBV</th><th>Does</th><th>FBV equivalent</th></tr></thead>
+      <tbody>
+        <tr><td><code>ListView</code></td><td>List a queryset (+ pagination)</td><td>query → render list</td></tr>
+        <tr><td><code>DetailView</code></td><td>One object by pk/slug</td><td>get_object_or_404 → render</td></tr>
+        <tr><td><code>CreateView</code></td><td>Show form → validate → save</td><td>the POST/GET dance above</td></tr>
+        <tr><td><code>UpdateView</code></td><td>Edit an existing object</td><td>bound form on instance</td></tr>
+        <tr><td><code>DeleteView</code></td><td>Confirm → delete → redirect</td><td>POST → obj.delete()</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note std">
+    <span class="lbl">Which to reach for</span>
+    <p>Start with a CBV when your view is "list these / show one / CRUD this model" — you'll write a fraction of the code. Drop to an FBV the moment the logic is genuinely custom (multi-step workflows, odd branching, several models at once). Mixing both in one project is normal and expected.</p>
+  </div>
+</section>
+
+<!-- ============ 9. FORMS ============ -->
+<section id="forms">
+  <span class="sec-num">09 — Input</span>
+  <h2>Forms &amp; validation</h2>
+  <p>Forms handle three jobs at once: render HTML inputs, validate incoming data, and clean it into Python types. A <code>ModelForm</code> derives all of that from a model, so you don't repeat field definitions. Validation is layered: field-level, then per-field <code>clean_&lt;field&gt;</code>, then a whole-form <code>clean()</code>.</p>
+
+  <div class="code">
+    <div class="code-head"><span class="code-file"><span class="dot"></span>blog/forms.py</span><span class="code-tag">python</span></div>
+    <pre><code class="language-python">from django import forms
+from django.utils import timezone
+from .models import Post
+
+
+class PostForm(forms.ModelForm):
+    class Meta:
+        model = Post
+        <span class="hljs-comment"># List fields explicitly — NEVER use "__all__" on user-facing forms,</span>
+        <span class="hljs-comment"># or a user could POST fields like `author` or `status` you didn't intend.</span>
+        fields = ["title", "body", "category", "tags", "status", "published_at"]
+        widgets = {
+            "body": forms.Textarea(attrs={"rows": 12, "class": "input"}),
+            "published_at": forms.DateTimeInput(
+                attrs={"type": "datetime-local", "class": "input"},
+            ),
+        }
+        help_texts = {"slug": "Leave blank to auto-generate from the title."}
+
+    <span class="hljs-comment"># FIELD-LEVEL validation: clean_&lt;fieldname&gt;() — must return the value</span>
+    def clean_title(self):
+        title = self.cleaned_data["title"].strip()
+        if len(title) &lt; 5:
+            raise forms.ValidationError("Title must be at least 5 characters.")
+        return title
+
+    <span class="hljs-comment"># FORM-LEVEL validation: clean() — cross-field rules go here</span>
+    def clean(self):
+        cleaned = super().clean()
+        status = cleaned.get("status")
+        published_at = cleaned.get("published_at")
+        if status == Post.Status.PUBLISHED and published_at &gt; timezone.now():
+            self.add_error(
+                "published_at",
+                "A published post can't have a future date.",
+            )
+        return cleaned</code></pre>
+  </div>
+
+  <div class="diagram">
+    <svg viewBox="0 0 900 130" role="img" aria-label="Form validation order: field cleaning, then per-field clean methods, then whole-form clean, producing cleaned_data or errors">
+      <defs>
+        <marker id="ar4" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="var(--rust)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </marker>
+      </defs>
+      <rect x="20" y="40" width="160" height="52" rx="8" fill="none" stroke="var(--slate)" stroke-width="1.2"/>
+      <text class="svg-t" x="100" y="62" text-anchor="middle" style="font-size:13px">Field.clean()</text>
+      <text class="svg-ts" x="100" y="80" text-anchor="middle">type coercion</text>
+      <rect x="235" y="40" width="180" height="52" rx="8" fill="none" stroke="var(--rust)" stroke-width="1.3"/>
+      <text class="svg-t" x="325" y="62" text-anchor="middle" style="font-size:13px">clean_&lt;field&gt;()</text>
+      <text class="svg-ts" x="325" y="80" text-anchor="middle">per-field rules</text>
+      <rect x="470" y="40" width="160" height="52" rx="8" fill="none" stroke="var(--gold)" stroke-width="1.3"/>
+      <text class="svg-t" x="550" y="62" text-anchor="middle" style="font-size:13px">clean()</text>
+      <text class="svg-ts" x="550" y="80" text-anchor="middle">cross-field rules</text>
+      <rect x="685" y="40" width="195" height="52" rx="8" fill="none" stroke="var(--moss)" stroke-width="1.3"/>
+      <text class="svg-t" x="782" y="62" text-anchor="middle" style="font-size:13px">cleaned_data</text>
+      <text class="svg-ts" x="782" y="80" text-anchor="middle">or form.errors</text>
+      <line x1="180" y1="66" x2="231" y2="66" stroke="var(--rust)" stroke-width="1.4" marker-end="url(#ar4)"/>
+      <line x1="415" y1="66" x2="466" y2="66" stroke="var(--rust)" stroke-width="1.4" marker-end="url(#ar4)"/>
+      <line x1="630" y1="66" x2="681" y2="66" stroke="var(--rust)" stroke-width="1.4" marker-end="url(#ar4)"/>
+    </svg>
+    <p class="dg-cap">form.is_valid() runs this pipeline; failures collect in form.errors</p>
+  </div>
+
+  <div class="note warn">
+    <span class="lbl">CSRF is not optional</span>
+    <p>Every POST form must include <code>{% csrf_token %}</code> inside the <code>&lt;form&gt;</code> tag. Django rejects POST requests without a valid token. This is on by default and protects against cross-site request forgery — don't disable it to "make the error go away."</p>
+  </div>
+</section>
+
+<!-- ============ 10. TEMPLATES ============ -->
+<section id="templates">
+  <span class="sec-num">10 — Presentation</span>
+  <h2>Templates</h2>
+  <p>Django templates render HTML from context data. The pattern that scales is <strong>inheritance</strong>: a single <code>base.html</code> defines the page shell with named <code>{% block %}</code> holes; every other template <code>{% extends %}</code> it and fills the blocks. You write the shared chrome once.</p>
+
+  <div class="code">
+    <div class="code-head"><span class="code-file"><span class="dot"></span>templates/base.html</span><span class="code-tag">html</span></div>
+    <pre><code class="language-html">{% load static %}
+&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;title&gt;{% block title %}My Site{% endblock %}&lt;/title&gt;
+  &lt;link rel="stylesheet" href="{% static 'css/main.css' %}"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;nav&gt;
+    {% if user.is_authenticated %}
+      &lt;span&gt;Hi, {{ user.get_short_name }}&lt;/span&gt;
+      &lt;a href="{% url 'accounts:logout' %}"&gt;Log out&lt;/a&gt;
+    {% else %}
+      &lt;a href="{% url 'accounts:login' %}"&gt;Log in&lt;/a&gt;
+    {% endif %}
+  &lt;/nav&gt;
+
+  {% comment %} Flash messages from the messages framework {% endcomment %}
+  {% for message in messages %}
+    &lt;div class="msg msg--{{ message.tags }}"&gt;{{ message }}&lt;/div&gt;
+  {% endfor %}
+
+  &lt;main&gt;
+    {% block content %}{% endblock %}   {# child templates fill this #}
+  &lt;/main&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+  </div>
+
+  <div class="code">
+    <div class="code-head"><span class="code-file"><span class="dot"></span>templates/blog/post_list.html</span><span class="code-tag">html</span></div>
+    <pre><code class="language-html">{% extends "base.html" %}
+
+{% block title %}Latest posts{% endblock %}
+
+{% block content %}
+  &lt;h1&gt;Latest posts&lt;/h1&gt;
+
+  {% for post in posts %}
+    &lt;article&gt;
+      {# get_absolute_url keeps links stable — see §07 #}
+      &lt;h2&gt;&lt;a href="{{ post.get_absolute_url }}"&gt;{{ post.title }}&lt;/a&gt;&lt;/h2&gt;
+      &lt;p class="meta"&gt;
+        by {{ post.author.get_full_name|default:post.author.email }}
+        · {{ post.published_at|date:"j M Y" }}   {# template FILTER #}
+      &lt;/p&gt;
+      &lt;p&gt;{{ post.body|truncatewords:30 }}&lt;/p&gt;
+    &lt;/article&gt;
+  {% empty %}
+    &lt;p&gt;No posts yet.&lt;/p&gt;   {# runs when the loop is empty #}
+  {% endfor %}
+
+  {# pagination context comes free from ListView.paginate_by #}
+  {% if is_paginated %}
+    &lt;nav class="pagination"&gt;
+      {% if page_obj.has_previous %}
+        &lt;a href="?page={{ page_obj.previous_page_number }}"&gt;Previous&lt;/a&gt;
+      {% endif %}
+      &lt;span&gt;Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}&lt;/span&gt;
+      {% if page_obj.has_next %}
+        &lt;a href="?page={{ page_obj.next_page_number }}"&gt;Next&lt;/a&gt;
+      {% endif %}
+    &lt;/nav&gt;
+  {% endif %}
+{% endblock %}</code></pre>
+  </div>
+
+  <div class="tbl">
+    <table>
+      <thead><tr><th>Syntax</th><th>Is a</th><th>Does</th></tr></thead>
+      <tbody>
+        <tr><td><code>{{ value }}</code></td><td>Variable</td><td>Prints (auto-HTML-escaped)</td></tr>
+        <tr><td><code>{% tag %}</code></td><td>Tag</td><td>Logic: <code>if</code>, <code>for</code>, <code>url</code>, <code>block</code></td></tr>
+        <tr><td><code>{{ v|filter }}</code></td><td>Filter</td><td>Transforms: <code>date</code>, <code>default</code>, <code>truncatewords</code></td></tr>
+        <tr><td><code>{# ... #}</code></td><td>Comment</td><td>Not rendered</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note std">
+    <span class="lbl">Templates are intentionally limited</span>
+    <p>You can't call arbitrary Python or pass function arguments in a template — that's by design, to keep logic in views. When you need real computation for display, write a custom template tag or filter in <code>blog/templatetags/</code>, or compute it in the view and pass it through the context.</p>
+  </div>
+</section>
+
+<!-- ============ 11. ADMIN ============ -->
+<section id="admin">
+  <span class="sec-num">11 — Free CRUD</span>
+  <h2>The admin site</h2>
+  <p>Django's admin is a full CRUD interface generated from your models — one of the framework's biggest wins. Register a model and you immediately get list, search, filter, and edit screens for staff users. Customise it with a <code>ModelAdmin</code>.</p>
+
+  <div class="code">
+    <div class="code-head"><span class="code-file"><span class="dot"></span>blog/admin.py</span><span class="code-tag">python</span></div>
+    <pre><code class="language-python">from django.contrib import admin
+from .models import Category, Post, Tag
+
+
+<span class="hljs-comment"># The @register decorator ties this config to the Post model</span>
+@admin.register(Post)
+class PostAdmin(admin.ModelAdmin):
+    <span class="hljs-comment"># Columns in the changelist table</span>
+    list_display = ["title", "author", "status", "published_at"]
+    list_filter = ["status", "created_at", "category"]      <span class="hljs-comment"># sidebar filters</span>
+    search_fields = ["title", "body"]                        <span class="hljs-comment"># search box</span>
+    date_hierarchy = "published_at"                          <span class="hljs-comment"># date drill-down bar</span>
+    ordering = ["-published_at"]
+
+    <span class="hljs-comment"># Auto-fill slug from title as you type in the form</span>
+    prepopulated_fields = {"slug": ("title",)}
+
+    <span class="hljs-comment"># Show FK/M2M as a fast typeahead instead of a giant dropdown</span>
+    autocomplete_fields = ["author", "category"]
+
+    <span class="hljs-comment"># Edit these right in the list without opening each row</span>
+    list_editable = ["status"]
+
+    <span class="hljs-comment"># Bulk action available from the changelist dropdown</span>
+    actions = ["make_published"]
+
+    @admin.action(description="Mark selected posts as published")
+    def make_published(self, request, queryset):
+        updated = queryset.update(status=Post.Status.PUBLISHED)
+        self.message_user(request, f"{updated} posts published.")
+
+
+admin.site.register(Category)
+admin.site.register(Tag)</code></pre>
+  </div>
+
+  <div class="code">
+    <div class="code-head"><span class="code-file"><span class="dot"></span>terminal</span><span class="code-tag">bash</span></div>
+    <pre><code class="language-bash"><span class="hljs-comment"># Create a staff/superuser account to log into /admin/</span>
+python manage.py createsuperuser</code></pre>
+  </div>
+</section>
+
+<!-- ============ 12. AUTH ============ -->
+<section id="auth">
+  <span class="sec-num">12 — Identity</span>
+  <h2>Auth &amp; the user model</h2>
+  <div class="note warn">
+    <span class="lbl">Do this on day one, before your first migrate</span>
+    <p>Define a custom user model even if it's empty. Swapping the user model <em>after</em> you have migrations and data is one of the most painful changes in Django. Set <code>AUTH_USER_MODEL</code> in settings from the start (shown in §03).</p>
+  </div>
+
+  <p>The standard production pattern is a user keyed by <strong>email</strong> rather than username, built on <code>AbstractUser</code> (keeps Django's permissions/groups machinery) with a custom manager.</p>
+
+  <div class="code">
+    <div class="code-head"><span class="code-file"><span class="dot"></span>accounts/models.py</span><span class="code-tag">python</span></div>
+    <pre><code class="language-python">from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.db import models
+
+
+class UserManager(BaseUserManager):
+    <span class="hljs-comment"># Manager tells Django how to build users without a username field</span>
+    use_in_migrations = True
+
+    def _create_user(self, email, password, **extra):
+        if not email:
+            raise ValueError("Email is required.")
+        email = self.normalize_email(email)
+        user = self.model(email=email, **extra)
+        user.set_password(password)          <span class="hljs-comment"># hashes — never store raw</span>
+        user.save(using=self._db)
+        return user
+
+    def create_user(self, email, password=None, **extra):
+        extra.setdefault("is_staff", False)
+        extra.setdefault("is_superuser", False)
+        return self._create_user(email, password, **extra)
+
+    def create_superuser(self, email, password, **extra):
+        extra.setdefault("is_staff", True)
+        extra.setdefault("is_superuser", True)
+        return self._create_user(email, password, **extra)
+
+
+class User(AbstractUser):
+    username = None                          <span class="hljs-comment"># drop username entirely</span>
+    email = models.EmailField(unique=True)
+
+    USERNAME_FIELD = "email"                 <span class="hljs-comment"># log in with email</span>
+    REQUIRED_FIELDS = []                     <span class="hljs-comment"># prompted by createsuperuser</span>
+
+    objects = UserManager()
+
+    def __str__(self):
+        return self.email</code></pre>
+  </div>
+
+  <p>For login/logout Django ships views you just wire up. Protect views with <code>@login_required</code> (FBV) or <code>LoginRequiredMixin</code> (CBV), both shown in §08.</p>
+
+  <div class="code">
+    <div class="code-head"><span class="code-file"><span class="dot"></span>accounts/urls.py</span><span class="code-tag">python</span></div>
+    <pre><code class="language-python">from django.contrib.auth import views as auth_views
+from django.urls import path
+
+app_name = "accounts"
+
+urlpatterns = [
+    <span class="hljs-comment"># Built-in views: you supply the template, Django does the logic</span>
+    path("login/", auth_views.LoginView.as_view(
+        template_name="accounts/login.html"), name="login"),
+    path("logout/", auth_views.LogoutView.as_view(), name="logout"),
+    path("password-change/", auth_views.PasswordChangeView.as_view(
+        template_name="accounts/password_change.html"), name="password_change"),
+]</code></pre>
+  </div>
+
+  <div class="tbl">
+    <table>
+      <thead><tr><th>Check</th><th>In a view</th><th>In a template</th></tr></thead>
+      <tbody>
+        <tr><td>Logged in?</td><td><code>request.user.is_authenticated</code></td><td><code>{% if user.is_authenticated %}</code></td></tr>
+        <tr><td>Require login</td><td><code>@login_required</code> / mixin</td><td>—</td></tr>
+        <tr><td>Has permission</td><td><code>request.user.has_perm("blog.add_post")</code></td><td><code>{% if perms.blog.add_post %}</code></td></tr>
+        <tr><td>Is staff</td><td><code>request.user.is_staff</code></td><td><code>{% if user.is_staff %}</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============ 13. STATIC & DEPLOY ============ -->
+<section id="static">
+  <span class="sec-num">13 — Shipping</span>
+  <h2>Static files &amp; deployment</h2>
+  <p>There are two file categories Django keeps deliberately separate. <strong>Static files</strong> are your CSS/JS/images — code assets you ship. <strong>Media files</strong> are user uploads. In development the dev server serves both; in production a real web server (or WhiteNoise) serves static, and media lives on disk or object storage.</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 900 220" role="img" aria-label="Deployment path: browser hits nginx, which serves static files directly and passes app requests to gunicorn running Django, which talks to Postgres">
+      <defs>
+        <marker id="ar5" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="var(--rust)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </marker>
+      </defs>
+      <rect x="20" y="85" width="120" height="55" rx="8" fill="none" stroke="var(--slate)" stroke-width="1.2"/>
+      <text class="svg-t" x="80" y="117" text-anchor="middle">Browser</text>
+
+      <rect x="200" y="85" width="130" height="55" rx="8" fill="none" stroke="var(--rust)" stroke-width="1.4"/>
+      <text class="svg-t" x="265" y="110" text-anchor="middle">Nginx</text>
+      <text class="svg-ts" x="265" y="128" text-anchor="middle">reverse proxy</text>
+
+      <rect x="200" y="10" width="130" height="50" rx="8" fill="none" stroke="var(--gold)" stroke-width="1.2" stroke-dasharray="5 4"/>
+      <text class="svg-ts" x="265" y="32" text-anchor="middle">/static/ · /media/</text>
+      <text class="svg-ts" x="265" y="49" text-anchor="middle">served directly</text>
+
+      <rect x="400" y="85" width="150" height="55" rx="8" fill="none" stroke="var(--rust)" stroke-width="1.4"/>
+      <text class="svg-t" x="475" y="110" text-anchor="middle">Gunicorn</text>
+      <text class="svg-ts" x="475" y="128" text-anchor="middle">WSGI server</text>
+
+      <rect x="615" y="85" width="140" height="55" rx="8" fill="none" stroke="var(--moss)" stroke-width="1.4"/>
+      <text class="svg-t" x="685" y="110" text-anchor="middle">Django</text>
+      <text class="svg-ts" x="685" y="128" text-anchor="middle">your app</text>
+
+      <rect x="815" y="85" width="75" height="55" rx="8" fill="none" stroke="var(--moss)" stroke-width="1.3"/>
+      <text class="svg-t" x="852" y="117" text-anchor="middle" style="font-size:12px">DB</text>
+
+      <line x1="140" y1="112" x2="196" y2="112" stroke="var(--rust)" stroke-width="1.4" marker-end="url(#ar5)"/>
+      <path d="M265 85 L265 62" fill="none" stroke="var(--gold)" stroke-width="1.3" marker-end="url(#ar5)"/>
+      <line x1="330" y1="112" x2="396" y2="112" stroke="var(--rust)" stroke-width="1.4" marker-end="url(#ar5)"/>
+      <line x1="550" y1="112" x2="611" y2="112" stroke="var(--rust)" stroke-width="1.4" marker-end="url(#ar5)"/>
+      <line x1="755" y1="112" x2="811" y2="112" stroke="var(--moss)" stroke-width="1.4" marker-end="url(#ar5)"/>
+    </svg>
+    <p class="dg-cap">Nginx serves static/media itself and proxies app requests to Gunicorn → Django</p>
+  </div>
+
+  <div class="code">
+    <div class="code-head"><span class="code-file"><span class="dot"></span>deployment checklist</span><span class="code-tag">bash</span></div>
+    <pre><code class="language-bash"><span class="hljs-comment"># Surface misconfigurations before deploying (checks DEBUG, SECRET_KEY, HSTS...)</span>
+python manage.py check --deploy
+
+<span class="hljs-comment"># Collect every app's static files into STATIC_ROOT for the web server</span>
+python manage.py collectstatic --noinput
+
+<span class="hljs-comment"># Apply migrations on the server</span>
+python manage.py migrate --noinput
+
+<span class="hljs-comment"># Run under a real WSGI server, not runserver (which is dev-only)</span>
+gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3</code></pre>
+  </div>
+
+  <div class="note tip">
+    <span class="lbl">Simplest static-in-prod setup</span>
+    <p>If you don't want to configure Nginx to serve static files, add <code>whitenoise</code>: put its middleware right after <code>SecurityMiddleware</code> and set the storage backend. Django then serves compressed, cache-busted static files itself — perfect for containers and platforms like Railway or Fly.io.</p>
+  </div>
+</section>
+
+<!-- ============ 14. COMMANDS ============ -->
+<section id="commands">
+  <span class="sec-num">14 — Reference</span>
+  <h2>Command cheat-sheet</h2>
+  <p>Everything routes through <code>manage.py</code>, which is just <code>django-admin</code> with your settings pre-loaded.</p>
+
+  <div class="tbl">
+    <table>
+      <thead><tr><th>Command</th><th>What it does</th></tr></thead>
+      <tbody>
+        <tr><td><code>startproject config .</code></td><td>Create project in current dir</td></tr>
+        <tr><td><code>startapp &lt;name&gt;</code></td><td>Scaffold a new app</td></tr>
+        <tr><td><code>runserver</code></td><td>Dev server (auto-reloads) — never in prod</td></tr>
+        <tr><td><code>makemigrations</code></td><td>Generate migration files from model changes</td></tr>
+        <tr><td><code>migrate</code></td><td>Apply migrations to the database</td></tr>
+        <tr><td><code>sqlmigrate &lt;app&gt; &lt;n&gt;</code></td><td>Show the SQL a migration will run</td></tr>
+        <tr><td><code>showmigrations</code></td><td>List migrations and their applied state</td></tr>
+        <tr><td><code>createsuperuser</code></td><td>Make an admin login</td></tr>
+        <tr><td><code>shell</code> / <code>dbshell</code></td><td>Python REPL with Django / DB shell</td></tr>
+        <tr><td><code>collectstatic</code></td><td>Gather static files for production</td></tr>
+        <tr><td><code>test</code></td><td>Run the test suite</td></tr>
+        <tr><td><code>check --deploy</code></td><td>Audit settings for production readiness</td></tr>
+        <tr><td><code>changepassword &lt;email&gt;</code></td><td>Reset a user's password</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note std">
+    <span class="lbl">Where to go next</span>
+    <p>The layers here compose into any Django project. Natural next steps once this is solid: writing tests with <code>pytest-django</code>, building a JSON API with Django REST Framework or Django Ninja, adding async views, and caching with Redis. Each slots onto the same request lifecycle you started with in §01.</p>
+  </div>
+</section>
+
+<footer>
+  <p>Django 5.2 LTS reference · built for keeping, not skimming</p>
+</footer>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>
+function toggleTheme(){
+  const r=document.documentElement;
+  const dark=r.getAttribute('data-theme')==='dark';
+  r.setAttribute('data-theme',dark?'light':'dark');
+  document.getElementById('themeBtn').textContent=dark?'☾':'☀';
+}
+try{ if(window.hljs){ hljs.highlightAll(); } }catch(e){}
+</script>
+</body>
+</html>
